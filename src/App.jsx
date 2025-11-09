@@ -50,50 +50,90 @@ function App() {
   };
 
   const askQuestion = async () => {
-    if (!question && !selectedHistory) return false;
+    if (!question && !selectedHistory) return;
 
-    if (question) {
-      let history = JSON.parse(localStorage.getItem('history')) || [];
-      history = [question, ...history];
-      localStorage.setItem('history', JSON.stringify(history));
-      setRecentHistory(history);
+    try {
+      // 🕘 Save history only when a new question is asked
+      if (question) {
+        let history = JSON.parse(localStorage.getItem('history')) || [];
+        history = [question, ...history];
+        localStorage.setItem('history', JSON.stringify(history));
+        setRecentHistory(history);
+      }
+
+      const payloadData = question || selectedHistory;
+      const payLoad = {
+        contents: [{ parts: [{ text: payloadData }] }],
+      };
+
+      setLoader(true);
+
+      const res = await fetch(URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payLoad),
+      });
+
+      // 🧱 Handle HTTP errors like 429 or invalid key
+      if (!res.ok) {
+        if (res.status === 429) {
+          setResult([
+            ...result,
+            { type: 'q', text: payloadData },
+            { type: 'a', text: ['⚠️ Too many requests — slow down or try again later.'] },
+          ]);
+        } else {
+          setResult([
+            ...result,
+            { type: 'q', text: payloadData },
+            { type: 'a', text: [`⚠️ API Error: ${res.status} — please check your key or try again.`] },
+          ]);
+        }
+        setLoader(false);
+        return;
+      }
+
+      const data = await res.json();
+      console.log(data);
+
+      // 🧩 Handle missing or broken data safely
+      const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "⚠️ No response received from Gemini API.";
+
+      const dataString = aiText.split('* ').map((item) => item.trim());
+      const fullResponse = dataString.join(' ');
+
+      // 🔊 Speak the response out loud
+      speakText(fullResponse);
+
+      setResult([
+        ...result,
+        { type: 'q', text: payloadData },
+        { type: 'a', text: dataString },
+      ]);
+
+      setQuestion('');
+      setTimeout(() => {
+        scrollToAns.current.scrollTop = scrollToAns.current.scrollHeight;
+      }, 500);
+
+    } catch (err) {
+      console.error('Error:', err);
+      setResult([
+        ...result,
+        { type: 'q', text: question },
+        { type: 'a', text: ['⚠️ Something went wrong — please try again later.'] },
+      ]);
+    } finally {
+      setLoader(false);
     }
-
-    const payloadData = question || selectedHistory;
-    const payLoad = {
-      contents: [{ parts: [{ text: payloadData }] }],
-    };
-    setLoader(true);
-
-    let response = await fetch(URL, {
-      method: 'POST',
-      body: JSON.stringify(payLoad),
-    });
-
-    response = await response.json();
-    let dataString = response.candidates[0].content.parts[0].text;
-    dataString = dataString.split('* ').map((item) => item.trim());
-
-    // ✅ Speak AI response out loud
-    const fullResponse = dataString.join(' ');
-    speakText(fullResponse);
-
-    setResult([
-      ...result,
-      { type: 'q', text: question || selectedHistory },
-      { type: 'a', text: dataString },
-    ]);
-
-    setQuestion('');
-    setTimeout(() => {
-      scrollToAns.current.scrollTop = scrollToAns.current.scrollHeight;
-    }, 500);
-    setLoader(false);
   };
-
   const isEnter = (event) => {
-    if (event.key === 'Enter') askQuestion();
+    if (event.key === 'Enter') {
+      askQuestion(); // your function that sends the query
+    }
   };
+
 
   useEffect(() => {
     askQuestion();
@@ -178,10 +218,10 @@ function App() {
           {/* Input Area */}
           <div
             className={`w-1/2 p-1 pr-5 mx-auto mt-10 rounded-4xl border h-16 flex justify-between items-center 
-            ${darkMode === 'dark' 
-              ? 'bg-zinc-800 text-white border-zinc-700' 
-              : 'bg-pink-100 text-zinc-800 border-pink-300'
-            }`}
+            ${darkMode === 'dark'
+                ? 'bg-zinc-800 text-white border-zinc-700'
+                : 'bg-pink-100 text-zinc-800 border-pink-300'
+              }`}
           >
             <input
               type='text'
@@ -192,23 +232,22 @@ function App() {
               placeholder='Ask me anything'
             />
 
- <button
-  onClick={() => recognition && recognition.start()}
-  className={`mr-3 p-2 rounded-full border transition-all duration-300 ${
-    listening 
-      ? 'bg-purple-700 border-purple-400 text-white scale-110' 
-      : 'border-zinc-600 hover:border-purple-400'
-  }`}
-  title='Start Voice Input'
->
-  <svg xmlns="http://www.w3.org/2000/svg" 
-       fill="none" viewBox="0 0 24 24" 
-       strokeWidth="1.5" stroke="currentColor" 
-       className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" 
-          d="M12 18.75a6.75 6.75 0 006.75-6.75M12 18.75A6.75 6.75 0 015.25 12M12 18.75v2.25m0-20.25v7.5a2.25 2.25 0 004.5 0v-7.5M9 12h6"/>
-  </svg>
-</button>
+            <button
+              onClick={() => recognition && recognition.start()}
+              className={`mr-3 p-2 rounded-full border transition-all duration-300 ${listening
+                  ? 'bg-purple-700 border-purple-400 text-white scale-110'
+                  : 'border-zinc-600 hover:border-purple-400'
+                }`}
+              title='Start Voice Input'
+            >
+              <svg xmlns="http://www.w3.org/2000/svg"
+                fill="none" viewBox="0 0 24 24"
+                strokeWidth="1.5" stroke="currentColor"
+                className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M12 18.75a6.75 6.75 0 006.75-6.75M12 18.75A6.75 6.75 0 015.25 12M12 18.75v2.25m0-20.25v7.5a2.25 2.25 0 004.5 0v-7.5M9 12h6" />
+              </svg>
+            </button>
 
 
 
