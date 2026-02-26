@@ -1,12 +1,41 @@
-# React + Vite
+# React AI Chat Assistant 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time AI-powered chat assistant built using React and OpenAI API.  
+Designed with scalable component architecture and responsive UI for smooth user interaction.
 
-Currently, two official plugins are available:
+## 🔗 Live Demo
+https://react-ai-tool-six-iota.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🛠 Tech Stack
+- React
+- JavaScript
+- OpenAI API
+- Tailwind CSS
+- Vercel (Deployment)
 
-## Expanding the ESLint configuration
+## ✨ Features
+- Real-time AI responses
+- Context-aware prompt handling
+- Clean and responsive UI
+- Modular component structure
+- Ready for backend integration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ⚙️ Installation
+
+Clone the repository:
+
+git clone https://github.com/preetika260606/ai-chat-assistant.git
+
+Install dependencies:
+
+npm install
+
+Start development server:
+
+npm run dev
+
+## 📌 Future Improvements
+- Backend integration with Node.js
+- Authentication (JWT)
+- Chat history storage using MongoDB
+- Multi-user support
